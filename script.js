@@ -1,4 +1,10 @@
-﻿console.log('✓ script.js starting to load...');
+// Deshabilitar logs en producci�n
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const debugLog = isProduction ? () => {} : console.log;
+const debugError = isProduction ? () => {} : console.error;
+const debugWarn = isProduction ? () => {} : console.warn;
+
+debugLog('? script.js starting to load...');
 
 /* =====================================================
    INSTRUMENTOS
@@ -10,11 +16,11 @@ const INST = [
   { id: 'cedear', name: 'CEDEARs',    color: '#9d4edd', defaultTNA: 45,  defaultDist: 15, defaultComp: 'anual', isUSD: true, enabled: false },
   { id: 'caucion',name: 'Cauciones',  color: '#ff006e', defaultTNA: 95,  defaultDist: 15, defaultComp: 'diario',  enabled: false },
   { id: 'pfuva',  name: 'Plazo Fijo UVA', color: '#00b4d8', defaultTNA: 85, defaultDist: 10, defaultComp: 'anual', enabled: false },
-  { id: 'usd',    name: 'Dólares',    color: '#ffd60a', defaultTNA: 0,   defaultDist: 5,  defaultComp: 'anual', isUSD: true, enabled: false },
+  { id: 'usd',    name: 'D�lares',    color: '#ffd60a', defaultTNA: 0,   defaultDist: 5,  defaultComp: 'anual', isUSD: true, enabled: false },
   { id: 'bonos',  name: 'Bonos',      color: '#fb5607', defaultTNA: 120, defaultDist: 5,  defaultComp: 'anual', enabled: false },
 ];
 
-console.log('✓ INST array defined:', INST.length, 'items');
+debugLog('? INST array defined:', INST.length, 'items');
 
 let currency = 'ARS';
 let chartInstance = null;
@@ -54,21 +60,21 @@ const MARKET_TNA_COMPARATASAS = {
 const MOTIVATIONAL_PHRASES = [
   'Cada aporte es un voto por tu libertad futura.',
   'No se trata de velocidad, se trata de constancia.',
-  'Tu objetivo crece incluso cuando vos descansás.',
+  'Tu objetivo crece incluso cuando vos descans�s.',
   'El mejor momento para empezar fue ayer. El segundo mejor es hoy.',
-  'Tu yo de mañana te agradece cada decisión de hoy.',
-  'Pequeños montos, gran disciplina, resultados enormes.',
+  'Tu yo de ma�ana te agradece cada decisi�n de hoy.',
+  'Peque�os montos, gran disciplina, resultados enormes.',
 ];
 
 /* =====================================================
    REST API (SQLite Backend) + Authentication
    ===================================================== */
-// ❌ DEPRECATED: Using Supabase instead of HTTP API
+// ? DEPRECATED: Using Supabase instead of HTTP API
 // const API_URL = 'http://127.0.0.1:3000/api';
-// console.log('✓ API_URL defined:', API_URL);
+// debugLog('? API_URL defined:', API_URL);
 
-// ✅ NEW: Using Supabase client (initialized in supabase-init.js)
-console.log('✓ Using Supabase for database operations');
+// ? NEW: Using Supabase client (initialized in supabase-init.js)
+debugLog('? Using Supabase for database operations');
 
 let db = null;
 let currentUserId = null;
@@ -103,11 +109,11 @@ function clearSession() {
 async function openDB() {
   // Check if Supabase is available (v2.0 with Electron)
   try {
-    console.log('🔄 Esperando Supabase...');
+    debugLog('?? Esperando Supabase...');
     
-    // Opción 1: Esperar evento supabaseReady (nuevo método)
+    // Opci�n 1: Esperar evento supabaseReady (nuevo m�todo)
     if (!window.supabase) {
-      console.log('📡 Escuchando evento supabaseReady...');
+      debugLog('?? Escuchando evento supabaseReady...');
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Timeout esperando supabaseReady'));
@@ -120,7 +126,7 @@ async function openDB() {
       });
     }
     
-    // Opción 2: Reintentar si aún no está (fallback)
+    // Opci�n 2: Reintentar si a�n no est� (fallback)
     let attempts = 0;
     while (!window.supabase && attempts < 50) {
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -129,23 +135,23 @@ async function openDB() {
     
     if (window.supabase) {
       db = true; // Flag indicating Supabase connection succeeded
-      console.log('✅ Supabase client inicializado correctamente');
+      debugLog('? Supabase client inicializado correctamente');
       return db;
     } else {
-      throw new Error('Supabase client no se inicializó');
+      throw new Error('Supabase client no se inicializ�');
     }
   } catch (err) {
-    console.error('❌ Error inicializando BD:', err.message);
-    throw new Error('Conexión fallida: ' + err.message);
+    debugError('? Error inicializando BD:', err.message);
+    throw new Error('Conexi�n fallida: ' + err.message);
   }
 }
 
 async function dbPut(tableName, value) {
   try {
-    if (!currentUserId) throw new Error('No estás autenticado');
+    if (!currentUserId) throw new Error('No est�s autenticado');
     if (!window.supabase) throw new Error('Supabase no inicializado');
     
-    // Añadir user_id si no existe
+    // A�adir user_id si no existe
     const record = { ...value, user_id: currentUserId };
     
     if (value.id) {
@@ -169,14 +175,14 @@ async function dbPut(tableName, value) {
       return data?.[0]?.id;
     }
   } catch (err) {
-    console.error('❌ dbPut error:', err);
+    debugError('? dbPut error:', err);
     throw err;
   }
 }
 
 async function dbGet(tableName, key) {
   try {
-    if (!currentUserId) throw new Error('No estás autenticado');
+    if (!currentUserId) throw new Error('No est�s autenticado');
     if (!window.supabase) throw new Error('Supabase no inicializado');
     
     const { data, error } = await window.supabase
@@ -189,7 +195,7 @@ async function dbGet(tableName, key) {
     if (error) throw new Error(`GET fallido: ${error.message}`);
     return data;
   } catch (err) {
-    console.error('❌ dbGet error:', err);
+    debugError('? dbGet error:', err);
     throw err;
   }
 }
@@ -198,31 +204,49 @@ async function dbGetAll(tableName) {
   try {
     if (!window.supabase) throw new Error('Supabase no inicializado');
     
-    // Tablas que son PÚBLICAS y no deben filtrar por user_id
+    // Tablas que son P�BLICAS y no deben filtrar por user_id
     const publicTables = ['activos_catalogo', 'activosCatalogo'];
     const isPublicTable = publicTables.includes(tableName);
     
     let query = window.supabase.from(tableName).select('*');
     
-    // Solo filtrar por user_id si NO es una tabla pública
+    // Solo filtrar por user_id si NO es una tabla p�blica
     if (!isPublicTable) {
-      if (!currentUserId) throw new Error('No estás autenticado');
+      if (!currentUserId) throw new Error('No est�s autenticado');
       query = query.eq('user_id', currentUserId);
     }
     
     const { data, error } = await query;
     
     if (error) throw new Error(`GET fallido: ${error.message}`);
-    return data || [];
+    
+    let results = data || [];
+    
+    // CASO ESPECIAL: Si es "Shawncita", buscar tambi�n datos bajo "Shawncito" (consolidaci�n temporal)
+    // "Shawncita" ID: 3788b6e2-970b-4b15-9d6e-e63610899188
+    // "Shawncito" ID: 6b6ecab9-282a-4aa5-a5ad-edbf34772f70
+    const shawncitaId = '3788b6e2-970b-4b15-9d6e-e63610899188';
+    const shawncitoBkpId = '6b6ecab9-282a-4aa5-a5ad-edbf34772f70';
+    
+    if (!isPublicTable && currentUserId === shawncitaId) {
+      // Buscar datos adicionales bajo el otro ID
+      const query2 = window.supabase.from(tableName).select('*').eq('user_id', shawncitoBkpId);
+      const { data: data2, error: error2 } = await query2;
+      if (!error2 && data2) {
+        results = [...results, ...data2];
+      }
+    }
+    
+    return results;
   } catch (err) {
-    console.error('❌ dbGetAll error:', err);
+    debugError('? dbGetAll error:', err);
     throw err;
   }
 }
 
 async function dbDelete(tableName, key) {
   try {
-    if (!currentUserId) throw new Error('No estás autenticado');
+    if (!currentUserId) throw new Error('No est�s autenticado');
     if (!window.supabase) throw new Error('Supabase no inicializado');
     
     const { error } = await window.supabase
@@ -234,7 +258,7 @@ async function dbDelete(tableName, key) {
     if (error) throw new Error(`DELETE fallido: ${error.message}`);
     return { success: true };
   } catch (err) {
-    console.error('❌ dbDelete error:', err);
+    debugError('? dbDelete error:', err);
     throw err;
   }
 }
@@ -245,10 +269,10 @@ function togglePasswordVisibility() {
   const btn = document.getElementById('toggle-password');
   if (input.type === 'password') {
     input.type = 'text';
-    btn.textContent = '🙈';
+    btn.textContent = '??';
   } else {
     input.type = 'password';
-    btn.textContent = '👁️';
+    btn.textContent = '???';
   }
 }
 
@@ -259,96 +283,104 @@ async function loginUser() {
   const errorEl = document.getElementById('login-error');
 
   console.clear();
-  console.log('═'.repeat(60));
-  console.log('🔍 Intentando login con usuario:', usernameInput);
-  console.log('═'.repeat(60));
+  debugLog('-'.repeat(60));
+  debugLog('?? Intentando login con usuario:', usernameInput);
+  debugLog('-'.repeat(60));
 
   if (!usernameInput || !password) {
-    errorEl.textContent = 'Completá usuario y contraseña.';
+    errorEl.textContent = 'Complet� usuario y contrase�a.';
     errorEl.style.display = 'block';
     return;
   }
 
   try {
     if (!window.supabase) {
-      throw new Error('Supabase no inicializado - recargá la página');
+      throw new Error('Supabase no inicializado - recarg� la p�gina');
     }
     
-    console.log('🔎 Buscando usuario en Supabase...');
-    console.log('📡 Window.supabase existe:', !!window.supabase);
-    console.log('📡 Supabase URL:', window.supabase?.supabaseUrl);
+    debugLog('?? Buscando usuario en Supabase...');
+    debugLog('?? Window.supabase existe:', !!window.supabase);
+    debugLog('?? Supabase URL:', window.supabase?.supabaseUrl);
     
     // Primero, traer TODOS los usuarios y buscar localmente
     const { data: allUsers, error: fetchError } = await window.supabase
       .from('users')
       .select('*');
     
-    console.log('📊 Respuesta de fetch:', { success: !fetchError, errorMsg: fetchError?.message });
+    debugLog('?? Respuesta de fetch:', { success: !fetchError, errorMsg: fetchError?.message });
     
     if (fetchError) {
-      console.error('❌ Error al obtener usuarios:', fetchError);
-      errorEl.textContent = '❌ Error de conexión: ' + fetchError.message;
+      debugError('? Error al obtener usuarios:', fetchError);
+      errorEl.textContent = '? Error de conexi�n: ' + fetchError.message;
       errorEl.style.display = 'block';
       return;
     }
 
-    console.log('📊 Total de usuarios en DB:', allUsers?.length || 0);
-    console.log('👥 Usuarios disponibles:', allUsers?.map(u => u.username));
+    debugLog('?? Total de usuarios en DB:', allUsers?.length || 0);
+    debugLog('?? Usuarios disponibles:', allUsers?.map(u => u.username));
     
     // Buscar usuario: PRIMERO exacta (case-sensitive), luego case-insensitive
-    console.log(`\n🔍 Buscando "${usernameInput}" (case-sensitive primero)...`);
+    debugLog(`\n?? Buscando "${usernameInput}" (case-sensitive primero)...`);
     let user = allUsers?.find(u => u.username === usernameInput);
     
     if (user) {
-      console.log(`✅ Encontrado match exacto: "${user.username}"`);
+      debugLog(`? Encontrado match exacto: "${user.username}"`);
     } else {
-      console.log(`❌ No hay match exacto. Buscando case-insensitive...`);
+      debugLog(`? No hay match exacto. Buscando case-insensitive...`);
       user = allUsers?.find(u => 
         u.username && u.username.toLowerCase() === usernameInput.toLowerCase()
       );
       if (user) {
-        console.log(`✅ Encontrado match case-insensitive: "${user.username}"`);
+        debugLog(`? Encontrado match case-insensitive: "${user.username}"`);
       } else {
-        console.log(`❌ No encontrado en ningún modo`);
+        debugLog(`? No encontrado en ning�n modo`);
       }
     }
     
     if (!user) {
-      console.log(`\n❌ USUARIO NO ENCONTRADO: "${usernameInput}"`);
-      console.log('Usuarios en BD:', allUsers?.map(u => u.username));
-      errorEl.textContent = 'Usuario o contraseña incorrectos';
+      debugLog(`\n? USUARIO NO ENCONTRADO: "${usernameInput}"`);
+      debugLog('Usuarios en BD:', allUsers?.map(u => u.username));
+      errorEl.textContent = 'Usuario o contrase�a incorrectos';
       errorEl.style.display = 'block';
       return;
     }
     
-    console.log(`\n🔐 Usuario encontrado: "${user.username}" (ID: ${user.id})`);
-    console.log(`🔐 Verificando contraseña...`);
-    console.log(`   Input: "${password}"`);
-    console.log(`   BD:    "${user.password}"`);
-    console.log(`   Match: ${user.password === password}`);
+    debugLog(`\n?? Usuario encontrado: "${user.username}" (ID: ${user.id})`);
+    debugLog(`?? Verificando contrase�a...`);
+    debugLog(`   Input: "${password}"`);
+    debugLog(`   BD:    "${user.password}"`);
+    debugLog(`   Match: ${user.password === password}`);
     
     
-    // Verificar contraseña (plaintext - considerar bcrypt después)
+    // Verificar contrase�a (plaintext - considerar bcrypt despu�s)
     if (user.password !== password) {
-      console.log('❌ CONTRASEÑA INCORRECTA');
-      errorEl.textContent = 'Usuario o contraseña incorrectos';
+      debugLog('? CONTRASE�A INCORRECTA');
+      errorEl.textContent = 'Usuario o contrase�a incorrectos';
       errorEl.style.display = 'block';
       return;
     }
     
-    console.log('✅ CONTRASEÑA CORRECTA');
-    console.log('✅ LOGIN EXITOSO PARA:', user.username);
-    console.log('═'.repeat(60) + '\n');
+    debugLog('? CONTRASE�A CORRECTA');
+    debugLog('? LOGIN EXITOSO PARA:', user.username);
+    debugLog('-'.repeat(60) + '\n');
     errorEl.style.display = 'none';
     
     // Login exitoso
-    saveSession(user.id, user.username);
+    let userIdToUse = user.id;
+    
+    // CASE ESPECIAL: Shawncito tiene datos bajo ID fijo
+    if (user.username === 'Shawncito') {
+      userIdToUse = '6b6ecab9-282a-4aa5-a5ad-edbf34772f70';
+      debugLog('?? Shawncito: Usando user_id fijo para acceder a sus datos:', userIdToUse);
+    }
+    
+    saveSession(userIdToUse, user.username);
     showApp();
   } catch (err) {
-    console.error('❌ LOGIN ERROR:', err);
-    console.error('Stack:', err.stack);
-    console.log('═'.repeat(60) + '\n');
-    errorEl.textContent = '❌ Error: ' + err.message;
+    debugError('? LOGIN ERROR:', err);
+    debugError('Stack:', err.stack);
+    debugLog('-'.repeat(60) + '\n');
+    errorEl.textContent = '? Error: ' + err.message;
     errorEl.style.display = 'block';
   }
 }
@@ -358,16 +390,16 @@ async function registerUser() {
   const password = (document.getElementById('login-password')?.value || '').trim();
   const errorEl = document.getElementById('login-error');
 
-  console.log('📝 Intentando registrar usuario:', usernameInput);
+  debugLog('?? Intentando registrar usuario:', usernameInput);
 
   if (!usernameInput || !password) {
-    errorEl.textContent = 'Completá usuario y contraseña.';
+    errorEl.textContent = 'Complet� usuario y contrase�a.';
     errorEl.style.display = 'block';
     return;
   }
 
   if (password.length < 4) {
-    errorEl.textContent = 'Contraseña debe tener al menos 4 caracteres.';
+    errorEl.textContent = 'Contrase�a debe tener al menos 4 caracteres.';
     errorEl.style.display = 'block';
     return;
   }
@@ -375,7 +407,7 @@ async function registerUser() {
   try {
     if (!window.supabase) throw new Error('Supabase no inicializado');
     
-    console.log('🔎 Verificando si usuario ya existe...');
+    debugLog('?? Verificando si usuario ya existe...');
     
     // Verificar que no exista (case-insensitive)
     const { data: allUsers, error: fetchError } = await window.supabase
@@ -391,13 +423,13 @@ async function registerUser() {
     );
     
     if (userExists) {
-      console.log('❌ Usuario ya existe:', usernameInput);
+      debugLog('? Usuario ya existe:', usernameInput);
       errorEl.textContent = 'Este usuario ya existe. Intenta con otro nombre.';
       errorEl.style.display = 'block';
       return;
     }
 
-    console.log('✅ Usuario disponible, creando...');
+    debugLog('? Usuario disponible, creando...');
     
     // Insertar nuevo usuario
     const { data, error } = await window.supabase
@@ -406,7 +438,7 @@ async function registerUser() {
       .select();
     
     if (error) {
-      console.error('❌ Error en insert:', error);
+      debugError('? Error en insert:', error);
       errorEl.textContent = 'Error en registro: ' + error.message;
       errorEl.style.display = 'block';
       return;
@@ -416,18 +448,18 @@ async function registerUser() {
       throw new Error('No se retornaron datos del usuario creado');
     }
 
-    console.log('✅ Usuario registrado exitosamente:', data[0].username);
+    debugLog('? Usuario registrado exitosamente:', data[0].username);
     errorEl.style.display = 'none';
     
-    // Cargar activos del catálogo y crear tenencias iniciales
-    console.log('📦 Inicializando tenencias del catálogo...');
+    // Cargar activos del cat�logo y crear tenencias iniciales
+    debugLog('?? Inicializando tenencias del cat�logo...');
     try {
       const { data: catalogo, error: catError } = await window.supabase
         .from('activos_catalogo')
         .select('id');
       
       if (!catError && catalogo && catalogo.length > 0) {
-        // Crear tenencia para cada activo del catálogo
+        // Crear tenencia para cada activo del cat�logo
         const tenenciasIniciales = catalogo.map(activo => ({
           user_id: data[0].id,
           activo_id: activo.id,
@@ -441,21 +473,21 @@ async function registerUser() {
           .insert(tenenciasIniciales);
         
         if (insertError) {
-          console.warn('⚠️ Error creando tenencias iniciales:', insertError);
+          debugWarn('?? Error creando tenencias iniciales:', insertError);
         } else {
-          console.log('✅ Tenencias iniciales creadas para', catalogo.length, 'activos');
+          debugLog('? Tenencias iniciales creadas para', catalogo.length, 'activos');
         }
       }
     } catch (err) {
-      console.warn('⚠️ Error inicializando activos:', err.message);
+      debugWarn('?? Error inicializando activos:', err.message);
     }
     
-    // Registro exitoso - login automático
+    // Registro exitoso - login autom�tico
     saveSession(data[0].id, data[0].username);
     showApp();
   } catch (err) {
-    console.error('❌ Register error:', err);
-    errorEl.textContent = 'Error de conexión: ' + err.message;
+    debugError('? Register error:', err);
+    errorEl.textContent = 'Error de conexi�n: ' + err.message;
     errorEl.style.display = 'block';
   }
 }
@@ -517,15 +549,15 @@ function showToast(message, type = 'success') {
   if (type === 'success') {
     toast.style.background = '#2d3d2d';
     toast.style.color = '#4ade80';
-    toast.innerHTML = '✓ ' + message;
+    toast.innerHTML = '? ' + message;
   } else if (type === 'error') {
     toast.style.background = '#3d2d2d';
     toast.style.color = '#ff6b6b';
-    toast.innerHTML = '✕ ' + message;
+    toast.innerHTML = '? ' + message;
   } else {
     toast.style.background = '#2d3d4d';
     toast.style.color = '#4a9eff';
-    toast.innerHTML = 'ℹ ' + message;
+    toast.innerHTML = '? ' + message;
   }
 
   document.body.appendChild(toast);
@@ -573,7 +605,7 @@ function applyConfig(cfg) {
 
   if (cfg.horizonte !== undefined) {
     document.getElementById('horizonte').value = cfg.horizonte;
-    document.getElementById('hor-val').textContent = cfg.horizonte + ' años';
+    document.getElementById('hor-val').textContent = cfg.horizonte + ' a�os';
   }
   if (cfg.inflacion !== undefined) {
     document.getElementById('inflacion').value = cfg.inflacion;
@@ -647,19 +679,19 @@ function isPlanInputReady() {
 
 async function startObjectivePlan() {
   if (!isPlanInputReady()) {
-    alert('Completá capital inicial, aporte mensual y horizonte antes de iniciar el objetivo.');
+    alert('Complet� capital inicial, aporte mensual y horizonte antes de iniciar el objetivo.');
     return;
   }
   planState.startedAt = new Date().toISOString();
   planState.horizonYears = parseInt(document.getElementById('horizonte').value, 10) || 1;
   planState.capitalProyectadoFijo = getCapitalProjectado(); // Congelar capital proyectado
   await saveObjetivoToDB(); // Esperar a que se guarde el objetivo
-  setTab('objetivo', false); // false = no llamar a saveConfigDB() acá
+  setTab('objetivo', false); // false = no llamar a saveConfigDB() ac�
   updateObjectiveView();
 }
 
 function resetObjectivePlan() {
-  if (!confirm('¿Querés reiniciar el objetivo en curso? El simulador no se borra.')) return;
+  if (!confirm('�Quer�s reiniciar el objetivo en curso? El simulador no se borra.')) return;
   planState.startedAt = null;
   planState.horizonYears = null;
   planState.capitalProyectadoFijo = null; // Descongelar capital proyectado
@@ -707,10 +739,10 @@ async function saveObjetivoToDB() {
     // Si hay objetivo activo, guardar en DB
     if (planState.startedAt) {
       const savedId = await dbPut('objetivos', objetivo);
-      planState.objetivoId = savedId; // Guardar el ID para próximas actualizaciones
+      planState.objetivoId = savedId; // Guardar el ID para pr�ximas actualizaciones
     }
   } catch (err) {
-    console.error('Error saving objetivo:', err);
+    debugError('Error saving objetivo:', err);
   }
 }
 
@@ -731,7 +763,7 @@ async function loadObjetivoFromDB() {
       }
     }
   } catch (err) {
-    console.error('Error loading objetivo:', err);
+    debugError('Error loading objetivo:', err);
   }
 }
 
@@ -797,7 +829,7 @@ function getTenenciasTotals() {
 
   tenenciasCache.forEach(t => {
     const cantidad = Number(t.cantidad) || 0;
-    const precio = Number(t.precioUnitario) || 0;
+    const precio = Number(t.precio_unitario) || 0;
     const total = cantidad * precio;
     if (t.moneda === 'USD') {
       usdNominal += total;
@@ -830,7 +862,7 @@ function updateMonthlyGoalProgress() {
   document.getElementById('month-progress-fill').style.width = pctWidth + '%';
 
   if (goal <= 0) {
-    document.getElementById('month-progress-note').textContent = 'Definí un aporte mensual para activar el objetivo del mes.';
+    document.getElementById('month-progress-note').textContent = 'Defin� un aporte mensual para activar el objetivo del mes.';
     return;
   }
 
@@ -852,7 +884,7 @@ function updateMonthlyGoalProgress() {
   document.getElementById('total-progress-fill').style.width = totalPctWidth + '%';
 
   if (targetTotal <= 0) {
-    document.getElementById('total-progress-note').textContent = 'Definí capital y aportes para medir el objetivo total.';
+    document.getElementById('total-progress-note').textContent = 'Defin� capital y aportes para medir el objetivo total.';
   } else if (wealthNow >= targetTotal) {
     document.getElementById('total-progress-note').textContent = 'Objetivo financiero nominal alcanzado considerando aportes y tenencias.';
   } else {
@@ -866,7 +898,7 @@ function updateObjectiveView() {
   startBtn.style.opacity = startBtn.disabled ? '0.6' : '1';
 
   // Actualizar capital proyectado y acumulado
-  // Si el objetivo está activo, usar el capital congelado; si no, usar el actual del simulador
+  // Si el objetivo est� activo, usar el capital congelado; si no, usar el actual del simulador
   const capitalProyectado = planState.startedAt ? (planState.capitalProyectadoFijo || getCapitalProjectado()) : getCapitalProjectado();
   const capitalAcumulado = getCapitalAcumulado();
   
@@ -888,7 +920,7 @@ function updateObjectiveView() {
     document.getElementById('count-hours').textContent = '0';
     document.getElementById('count-minutes').textContent = '0';
     document.getElementById('count-seconds').textContent = '0';
-    status.textContent = 'Esperando inicio del objetivo. Presioná "Iniciar mi objetivo".';
+    status.textContent = 'Esperando inicio del objetivo. Presion� "Iniciar mi objetivo".';
     updateMonthlyGoalProgress();
     return;
   }
@@ -905,17 +937,17 @@ function updateObjectiveView() {
   document.getElementById('count-minutes').textContent = String(rem.minutes);
   document.getElementById('count-seconds').textContent = String(rem.seconds);
 
-  // Verificar si se alcanzó la meta de capital
+  // Verificar si se alcanz� la meta de capital
   const capitalProyectadoMeta = planState.capitalProyectadoFijo || getCapitalProjectado();
   const capitalAcumuladoActual = getCapitalAcumulado();
   const metaAlcanzada = capitalAcumuladoActual >= capitalProyectadoMeta;
 
   if (rem.done) {
-    status.textContent = '🎉 ¡Objetivo alcanzado! Cumpliste el horizonte del plan.';
+    status.textContent = '?? �Objetivo alcanzado! Cumpliste el horizonte del plan.';
   } else if (metaAlcanzada) {
-    status.textContent = '🎉 ¡Felicitaciones! Alcanzaste tu meta de capital proyectado.';
+    status.textContent = '?? �Felicitaciones! Alcanzaste tu meta de capital proyectado.';
   } else {
-    status.textContent = 'Iniciado el ' + formatDateTime(startedAt) + ' · Meta: ' + formatDateTime(endAt);
+    status.textContent = 'Iniciado el ' + formatDateTime(startedAt) + ' � Meta: ' + formatDateTime(endAt);
   }
 
   updateMonthlyGoalProgress();
@@ -970,7 +1002,7 @@ function saveConfigDB() {
       });
       setSaveStatus('saved');
     } catch (e) {
-      console.error('Config save error:', e);
+      debugError('Config save error:', e);
       setSaveStatus('error');
     }
   }, 600);
@@ -990,20 +1022,20 @@ function setSaveStatus(state) {
       }
     }, 2500);
   } else if (state === 'saving') {
-    label.textContent = 'guardando…';
+    label.textContent = 'guardando�';
   } else {
     label.textContent = 'error al guardar';
   }
 }
 
 async function confirmReset() {
-  if (!confirm('¿Reiniciar toda la configuración a los valores por defecto? Esto NO borrará el historial de aportes.')) return;
+  if (!confirm('�Reiniciar toda la configuraci�n a los valores por defecto? Esto NO borrar� el historial de aportes.')) return;
   if (db) await dbDelete('config', 'main');
   location.reload();
 }
 
 /* =====================================================
-   TNA ↔ TEA CONVERSIONES
+   TNA ? TEA CONVERSIONES
    ===================================================== */
 function tnaToTea(tna, comp) {
   const r = tna / 100;
@@ -1019,7 +1051,7 @@ function teaToTna(tea, comp) {
   return r * 100; // anual, TNA = TEA
 }
 
-// Called when TNA input changes → update TEA
+// Called when TNA input changes ? update TEA
 function updateTEAFromTNA(id) {
   const tna  = parseFloat(document.getElementById(id + '-tna').value) || 0;
   const comp = document.getElementById(id + '-comp').value;
@@ -1031,7 +1063,7 @@ function updateTEAFromTNA(id) {
   delete teaEl.dataset.updating;
 }
 
-// Called when TEA input changes → update TNA
+// Called when TEA input changes ? update TNA
 function updateTNAFromTEA(id) {
   const teaEl = document.getElementById(id + '-tea');
   if (teaEl.dataset.updating) return;
@@ -1044,7 +1076,7 @@ function updateTNAFromTEA(id) {
   delete tnaEl.dataset.updating;
 }
 
-// Called when capitalización changes → re-derive TEA from current TNA
+// Called when capitalizaci�n changes ? re-derive TEA from current TNA
 function updateOnCompChange(id) {
   updateTEAFromTNA(id);
 }
@@ -1069,7 +1101,7 @@ function buildInstruments() {
           ${inst.enabled ? 'ON' : 'OFF'}
         </button>
       </div>
-      <div class="rate-sync-badge">TNA ↔ TEA <span>sincronizados</span></div>
+      <div class="rate-sync-badge">TNA ? TEA <span>sincronizados</span></div>
       <div class="field-row">
         <div class="field">
           <label>TNA (%)</label>
@@ -1083,7 +1115,7 @@ function buildInstruments() {
         </div>
       </div>
       <div class="field">
-        <label>Capitalización</label>
+        <label>Capitalizaci�n</label>
         <select id="${inst.id}-comp"
           onchange="updateOnCompChange('${inst.id}'); saveConfigDB(); recalc();" ${!inst.enabled ? 'disabled' : ''}>
           <option value="diario"  ${inst.defaultComp==='diario' ?'selected':''}>Diaria (365)</option>
@@ -1092,7 +1124,7 @@ function buildInstruments() {
         </select>
       </div>
       <div class="field" style="margin-bottom:0;">
-        <label>Distribución (%)</label>
+        <label>Distribuci�n (%)</label>
         <input type="number" id="${inst.id}-dist" value="${inst.defaultDist}" step="5" min="0" max="100"
           oninput="checkDist(); saveConfigDB(); recalc();" ${!inst.enabled ? 'disabled' : ''} />
       </div>`;
@@ -1151,7 +1183,7 @@ async function registrarAporte() {
 
     const aporte = { fecha, monto, moneda, timestamp: Date.now() };
     await dbPut('aportes', aporte);
-    showToast('✓ Aporte guardado exitosamente');
+    showToast('? Aporte guardado exitosamente');
 
     // reset form
     document.getElementById('aporte-monto-input').value = '';
@@ -1160,13 +1192,13 @@ async function registrarAporte() {
     await renderAportesTable();
     recalc();
   } catch (err) {
-    console.error('Error registrando aporte:', err);
-    showToast(`❌ Error: ${err.message}`, 'error');
+    debugError('Error registrando aporte:', err);
+    showToast(`? Error: ${err.message}`, 'error');
   }
 }
 
 async function eliminarAporte(id) {
-  if (!confirm('¿Eliminar este aporte?')) return;
+  if (!confirm('�Eliminar este aporte?')) return;
   await dbDelete('aportes', id);
   showToast('Aporte eliminado');
   await renderAportesTable();
@@ -1214,7 +1246,7 @@ async function renderAportesTable() {
       <td>${ap.moneda === 'ARS' ? '$ ' : 'US$ '}${ap.monto.toLocaleString('es-AR')}</td>
       <td>$ ${Math.round(eqARS).toLocaleString('es-AR')}</td>
       <td style="text-align:center;">
-        <button class="btn-icon" onclick="eliminarAporte(${ap.id})">✕</button>
+        <button class="btn-icon" onclick="eliminarAporte(${ap.id})">?</button>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -1237,15 +1269,32 @@ async function renderAportesTable() {
 }
 
 function formatFecha(isoDate) {
-  if (!isoDate) return '—';
+  if (!isoDate) return '�';
   const [y, m, d] = isoDate.split('-');
   return `${d}/${m}/${y}`;
 }
 
 function formatTimestamp(ts) {
-  if (!ts) return '—';
+  if (!ts) return '�';
+  
+  // Si es un string ISO (Supabase format)
+  if (typeof ts === 'string') {
+    const date = new Date(ts);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleString('es-AR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+    return '�';
+  }
+  
+  // Si es un n�mero (timestamp en milisegundos)
   const value = Number(ts);
-  if (!Number.isFinite(value) || value <= 0) return '—';
+  if (!Number.isFinite(value) || value <= 0) return '�';
   return new Date(value).toLocaleString('es-AR', {
     day: '2-digit',
     month: '2-digit',
@@ -1263,26 +1312,26 @@ async function loadTenenciasCache() {
   if (!db) return;
   try {
     const all = await dbGetAll('tenencias');
-    console.log('tenencias loaded:', all.length, 'items');
+    debugLog('tenencias loaded:', all.length, 'items');
     all.sort((a, b) => (b.updatedAt || b.timestamp || 0) - (a.updatedAt || a.timestamp || 0));
     tenenciasCache = all;
   } catch (e) {
-    console.error('Error loading tenencias:', e);
+    debugError('Error loading tenencias:', e);
   }
 }
 
 async function loadActivosCatalogoCache() {
   if (!db) {
-    console.warn('DB not initialized');
+    debugWarn('DB not initialized');
     return;
   }
   try {
     const all = await dbGetAll('activos_catalogo');
-    console.log('activos_catalogo loaded:', all.length, 'items');
+    debugLog('activos_catalogo loaded:', all.length, 'items');
     all.sort((a, b) => String(a.simbolo || '').localeCompare(String(b.simbolo || '')));
     activosCatalogoCache = all;
   } catch (e) {
-    console.error('Error loading activos_catalogo:', e);
+    debugError('Error loading activos_catalogo:', e);
   }
 }
 
@@ -1306,7 +1355,7 @@ function onTenenciaSearchInput() {
   filtered.forEach(a => {
     const div = document.createElement('div');
     div.style.cssText = 'padding:8px 12px; border-bottom:1px solid #333; cursor:pointer; font-size:12px; color:#ccc; font-family:"DM Mono"; transition:background 0.15s;';
-    div.textContent = `${a.simbolo} · ${a.nombre}`;
+    div.textContent = `${a.simbolo} � ${a.nombre}`;
     div.onmouseover = () => div.style.background = '#2a2a2a';
     div.onmouseout = () => div.style.background = '';
     div.onclick = () => {
@@ -1320,7 +1369,7 @@ function onTenenciaSearchInput() {
 
 function selectTenenciaActivo(activo) {
   document.getElementById('tenencia-activo').value = String(activo.id);
-  document.getElementById('tenencia-activo-search').value = `${activo.simbolo} · ${activo.nombre}`;
+  document.getElementById('tenencia-activo-search').value = `${activo.simbolo} � ${activo.nombre}`;
   document.getElementById('tenencia-activo-dropdown').style.display = 'none';
   onTenenciaActivoChange();
 }
@@ -1358,14 +1407,14 @@ function renderBbddTable() {
   activosCatalogoCache.forEach(a => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${a.simbolo || '—'}</td>
-      <td>${a.nombre || '—'}</td>
+      <td>${a.simbolo || '�'}</td>
+      <td>${a.nombre || '�'}</td>
       <td>${String(a.tipo || '').toUpperCase()}</td>
       <td>${a.moneda || 'ARS'}</td>
-      <td>${a.plataforma || '—'}</td>
+      <td>${a.plataforma || '�'}</td>
       <td style="text-align:center;">
-        <button class="btn-icon" onclick="iniciarEdicionActivoCatalogo(${a.id})">✎</button>
-        <button class="btn-icon" onclick="eliminarActivoCatalogo(${a.id})">✕</button>
+        <button class="btn-icon" onclick="iniciarEdicionActivoCatalogo(${a.id})">?</button>
+        <button class="btn-icon" onclick="eliminarActivoCatalogo(${a.id})">?</button>
       </td>`;
     body.appendChild(tr);
   });
@@ -1478,7 +1527,7 @@ async function registrarActivoCatalogo() {
 }
 
 async function eliminarActivoCatalogo(id) {
-  if (!confirm('¿Eliminar este activo del catálogo?')) return;
+  if (!confirm('�Eliminar este activo del cat�logo?')) return;
   await dbDelete('activos_catalogo', id);
   showToast('Activo eliminado de la BD');
   await loadActivosCatalogoCache();
@@ -1531,10 +1580,10 @@ function iniciarEdicionTenencia(id) {
   if (!ten) return;
 
   editingTenenciaId = id;
-  document.getElementById('tenencia-activo').value = String(ten.activoId || '');
+  document.getElementById('tenencia-activo').value = String(ten.activo_id || '');
   document.getElementById('tenencia-plataforma').value = ten.plataforma || '';
   document.getElementById('tenencia-cantidad').value = String(ten.cantidad ?? '');
-  document.getElementById('tenencia-precio').value = String(ten.precioUnitario ?? '');
+  document.getElementById('tenencia-precio').value = String(ten.precio_unitario ?? '');
   document.getElementById('tenencia-validation').style.display = 'none';
   updateTenenciaEditState();
 }
@@ -1552,7 +1601,7 @@ function renderTenenciasCharts() {
   const byActivo = {};
   const byTipo = {};
   tenenciasCache.forEach(t => {
-    const total = (Number(t.cantidad) || 0) * (Number(t.precioUnitario) || 0);
+    const total = (Number(t.cantidad) || 0) * (Number(t.precio_unitario) || 0);
     const arsEq = toARS(total, t.moneda, tc);
 
     const keyActivo = t.activo || 'SIN ACTIVO';
@@ -1679,21 +1728,21 @@ function renderTenenciasTables() {
     criptoEmpty.style.display = 'none';
     criptoWrap.style.display = 'block';
     cripto.forEach(t => {
-      const total = (Number(t.cantidad) || 0) * (Number(t.precioUnitario) || 0);
+      const total = (Number(t.cantidad) || 0) * (Number(t.precio_unitario) || 0);
       const eqArs = toARS(total, t.moneda, tc);
-      const fechaCarga = formatTimestamp(t.timestamp);
-      const fechaActualizacion = formatTimestamp(t.updatedAt || t.timestamp);
+      const fechaCarga = formatTimestamp(t.created_at);
+      const fechaActualizacion = formatTimestamp(t.updated_at || t.created_at);
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${t.activo}</td>
-        <td>${t.plataforma || '—'}</td>
+        <td>${t.plataforma || '�'}</td>
         <td>${Number(t.cantidad).toLocaleString('es-AR')}</td>
-        <td>${fmtTenenciaTotal(t.moneda, Number(t.precioUnitario) || 0)}</td>
+        <td>${fmtTenenciaTotal(t.moneda, Number(t.precio_unitario) || 0)}</td>
         <td>${fmtTenenciaTotal(t.moneda, total)}</td>
         <td>$ ${Math.round(eqArs).toLocaleString('es-AR')}</td>
         <td>${fechaCarga}</td>
         <td>${fechaActualizacion}</td>
-        <td style="text-align:center;"><button class="btn-icon" onclick="iniciarEdicionTenencia(${t.id})">✎</button><button class="btn-icon" onclick="eliminarTenencia(${t.id})">✕</button></td>`;
+        <td style="text-align:center;"><button class="btn-icon" onclick="iniciarEdicionTenencia(${t.id})">?</button><button class="btn-icon" onclick="eliminarTenencia(${t.id})">?</button></td>`;
       criptoBody.appendChild(tr);
     });
   }
@@ -1705,22 +1754,22 @@ function renderTenenciasTables() {
     otherEmpty.style.display = 'none';
     otherWrap.style.display = 'block';
     other.forEach(t => {
-      const total = (Number(t.cantidad) || 0) * (Number(t.precioUnitario) || 0);
+      const total = (Number(t.cantidad) || 0) * (Number(t.precio_unitario) || 0);
       const eqArs = toARS(total, t.moneda, tc);
-      const fechaCarga = formatTimestamp(t.timestamp);
-      const fechaActualizacion = formatTimestamp(t.updatedAt || t.timestamp);
+      const fechaCarga = formatTimestamp(t.created_at);
+      const fechaActualizacion = formatTimestamp(t.updated_at || t.created_at);
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${String(t.tipo || '').toUpperCase()}</td>
         <td>${t.activo}</td>
-        <td>${t.plataforma || '—'}</td>
+        <td>${t.plataforma || '�'}</td>
         <td>${Number(t.cantidad).toLocaleString('es-AR')}</td>
-        <td>${fmtTenenciaTotal(t.moneda, Number(t.precioUnitario) || 0)}</td>
+        <td>${fmtTenenciaTotal(t.moneda, Number(t.precio_unitario) || 0)}</td>
         <td>${fmtTenenciaTotal(t.moneda, total)}</td>
         <td>$ ${Math.round(eqArs).toLocaleString('es-AR')}</td>
         <td>${fechaCarga}</td>
         <td>${fechaActualizacion}</td>
-        <td style="text-align:center;"><button class="btn-icon" onclick="iniciarEdicionTenencia(${t.id})">✎</button><button class="btn-icon" onclick="eliminarTenencia(${t.id})">✕</button></td>`;
+        <td style="text-align:center;"><button class="btn-icon" onclick="iniciarEdicionTenencia(${t.id})">?</button><button class="btn-icon" onclick="eliminarTenencia(${t.id})">?</button></td>`;
       otherBody.appendChild(tr);
     });
   }
@@ -1743,8 +1792,8 @@ async function registrarTenencia() {
   const current = editingTenenciaId ? tenenciasCache.find(t => t.id === editingTenenciaId) : null;
   const canUseCurrent = Boolean(editingTenenciaId && current);
 
-  // Para nuevas tenencias, el activo del catálogo es obligatorio.
-  // Para edición, si el activo original ya no existe en catálogo, se permite editar cantidad/precio.
+  // Para nuevas tenencias, el activo del cat�logo es obligatorio.
+  // Para edici�n, si el activo original ya no existe en cat�logo, se permite editar cantidad/precio.
   const missingActivoForNew = !editingTenenciaId && !activoRef;
   const missingActivoForEdit = editingTenenciaId && !activoRef && !canUseCurrent;
   if (missingActivoForNew || missingActivoForEdit || !cantidad || !precioUnitario || cantidad <= 0 || precioUnitario <= 0) {
@@ -1757,11 +1806,11 @@ async function registrarTenencia() {
   const activo = (ref?.simbolo || ref?.activo || ref?.nombre || 'ACTIVO');
   const tenencia = {
     tipo: ref?.tipo || 'otro',
-    activoId: activoRef ? activoId : (current?.activoId || null),
+    activo_id: activoRef ? activoId : (current?.activo_id || null),
     activo,
     plataforma: plataforma || ref?.plataforma || '',
     cantidad,
-    precioUnitario,
+    precio_unitario: precioUnitario,
     moneda: ref?.moneda || 'ARS',
   };
 
@@ -1790,7 +1839,7 @@ async function registrarTenencia() {
 }
 
 async function eliminarTenencia(id) {
-  if (!confirm('¿Eliminar esta tenencia?')) return;
+  if (!confirm('�Eliminar esta tenencia?')) return;
   await dbDelete('tenencias', id);
   showToast('Tenencia eliminada');
   if (editingTenenciaId === id) {
@@ -1808,24 +1857,24 @@ const PATRIMONIO_HINTS = {
   casa: {
     label1: 'm2',
     ph1: 'Ej: 120',
-    label2: 'Ubicación',
+    label2: 'Ubicaci�n',
     ph2: 'Ej: CABA',
   },
   vehiculo: {
     label1: 'Marca/Modelo',
     ph1: 'Ej: Toyota Corolla',
-    label2: 'Año / Patente',
-    ph2: 'Ej: 2022 · AB123CD',
+    label2: 'A�o / Patente',
+    ph2: 'Ej: 2022 � AB123CD',
   },
   terreno: {
     label1: 'Superficie',
     ph1: 'Ej: 800 m2',
-    label2: 'Ubicación',
+    label2: 'Ubicaci�n',
     ph2: 'Ej: Zona norte',
   },
   derecho: {
     label1: 'Origen',
-    ph1: 'Ej: Regalías, contrato',
+    ph1: 'Ej: Regal�as, contrato',
     label2: 'Vencimiento',
     ph2: 'Ej: 12/2030',
   },
@@ -1905,11 +1954,11 @@ async function loadPatrimonioCache() {
   if (!db) return;
   try {
     const all = await dbGetAll('patrimonio');
-    console.log('patrimonio loaded:', all.length, 'items');
+    debugLog('patrimonio loaded:', all.length, 'items');
     all.sort((a, b) => (b.updatedAt || b.timestamp || 0) - (a.updatedAt || a.timestamp || 0));
     patrimonioCache = all;
   } catch (e) {
-    console.error('Error loading patrimonio:', e);
+    debugError('Error loading patrimonio:', e);
   }
 }
 
@@ -1986,15 +2035,15 @@ function renderPatrimonioTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${String(p.tipo || '').toUpperCase()}</td>
-      <td>${p.nombre || '—'}</td>
+      <td>${p.nombre || '�'}</td>
       <td>${p.moneda || 'ARS'}</td>
       <td>${p.moneda === 'USD' ? fmtUSD(valor) : fmtARS(valor)}</td>
       <td>${fmtARS(arsEq)}</td>
-      <td>${p.dato1 || '—'}</td>
-      <td>${p.dato2 || '—'}</td>
-      <td>${p.notas || '—'}</td>
+      <td>${p.dato1 || '�'}</td>
+      <td>${p.dato2 || '�'}</td>
+      <td>${p.notas || '�'}</td>
       <td>${formatTimestamp(p.updatedAt || p.timestamp)}</td>
-      <td style="text-align:center;"><button class="btn-icon" onclick="iniciarEdicionPatrimonio(${p.id})">✎</button> <button class="btn-icon" onclick="eliminarPatrimonio(${p.id})">✕</button></td>`;
+      <td style="text-align:center;"><button class="btn-icon" onclick="iniciarEdicionPatrimonio(${p.id})">?</button> <button class="btn-icon" onclick="eliminarPatrimonio(${p.id})">?</button></td>`;
     body.appendChild(tr);
   });
 
@@ -2058,7 +2107,7 @@ async function registrarPatrimonio() {
 }
 
 async function eliminarPatrimonio(id) {
-  if (!confirm('¿Eliminar este bien del patrimonio?')) return;
+  if (!confirm('�Eliminar este bien del patrimonio?')) return;
   await dbDelete('patrimonio', id);
   showToast('Bien eliminado del patrimonio');
   await loadPatrimonioCache();
@@ -2080,11 +2129,11 @@ async function loadNegociosEmpresasCache() {
   if (!db) return;
   try {
     const all = await dbGetAll('negocios_empresas');
-    console.log('negocios_empresas loaded:', all.length, 'items');
+    debugLog('negocios_empresas loaded:', all.length, 'items');
     all.sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || '')));
     negociosEmpresasCache = all;
   } catch (e) {
-    console.error('Error loading negocios_empresas:', e);
+    debugError('Error loading negocios_empresas:', e);
   }
 }
 
@@ -2092,17 +2141,17 @@ async function loadNegociosVentasCache() {
   if (!db) return;
   try {
     const all = await dbGetAll('negocios_ventas');
-    console.log('negocios_ventas loaded:', all.length, 'items');
+    debugLog('negocios_ventas loaded:', all.length, 'items');
     all.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
     negociosVentasCache = all;
   } catch (e) {
-    console.error('Error loading negocios_ventas:', e);
+    debugError('Error loading negocios_ventas:', e);
   }
 }
 
 function renderNegociosEmpresaSelector() {
   const sel = document.getElementById('venta-empresa');
-  sel.innerHTML = '<option value="">Seleccioná una empresa</option>';
+  sel.innerHTML = '<option value="">Seleccion� una empresa</option>';
 
   negociosEmpresasCache.forEach(n => {
     const opt = document.createElement('option');
@@ -2130,10 +2179,10 @@ function renderNegociosEmpresasTable() {
   negociosEmpresasCache.forEach(n => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${n.nombre || '—'}</td>
-      <td>${n.rubro || '—'}</td>
-      <td>${n.descripcion || '—'}</td>
-      <td style="text-align:center;"><button class="btn-icon" onclick="eliminarNegocioEmpresa(${n.id})">✕</button></td>`;
+      <td>${n.nombre || '�'}</td>
+      <td>${n.rubro || '�'}</td>
+      <td>${n.descripcion || '�'}</td>
+      <td style="text-align:center;"><button class="btn-icon" onclick="eliminarNegocioEmpresa(${n.id})">?</button></td>`;
     body.appendChild(tr);
   });
 }
@@ -2168,13 +2217,13 @@ async function registrarNegocioEmpresa() {
     renderNegociosEmpresasTable();
     renderNegociosEmpresaSelector();
   } catch (err) {
-    console.error('Error al guardar empresa:', err);
+    debugError('Error al guardar empresa:', err);
     showToast('Error al guardar empresa', 'error');
   }
 }
 
 async function eliminarNegocioEmpresa(id) {
-  if (!confirm('¿Eliminar esta empresa?')) return;
+  if (!confirm('�Eliminar esta empresa?')) return;
   await dbDelete('negocios_empresas', id);
   showToast('Empresa eliminada');
   await loadNegociosEmpresasCache();
@@ -2255,12 +2304,12 @@ function renderNegociosVentasTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${formatFecha(v.fecha)}</td>
-      <td>${v.empresaNombre || '—'}</td>
-      <td>${v.canal || '—'}</td>
+      <td>${v.empresaNombre || '�'}</td>
+      <td>${v.canal || '�'}</td>
       <td>${v.moneda || 'ARS'}</td>
       <td>${v.moneda === 'USD' ? fmtUSD(monto) : fmtARS(monto)}</td>
       <td>${fmtARS(arsEq)}</td>
-      <td style="text-align:center;"><button class="btn-icon" onclick="eliminarNegocioVenta(${v.id})">✕</button></td>`;
+      <td style="text-align:center;"><button class="btn-icon" onclick="eliminarNegocioVenta(${v.id})">?</button></td>`;
     body.appendChild(tr);
   });
 
@@ -2306,13 +2355,13 @@ async function registrarNegocioVenta() {
     await loadNegociosVentasCache();
     renderNegociosVentasTable();
   } catch (err) {
-    console.error('Error al guardar venta:', err);
+    debugError('Error al guardar venta:', err);
     showToast('Error al guardar venta', 'error');
   }
 }
 
 async function eliminarNegocioVenta(id) {
-  if (!confirm('¿Eliminar esta venta?')) return;
+  if (!confirm('�Eliminar esta venta?')) return;
   await dbDelete('negocios_ventas', id);
   showToast('Venta eliminada');
   await loadNegociosVentasCache();
@@ -2433,14 +2482,14 @@ function numberToWords(num) {
   if (num === 0) return 'cero';
   if (num < 0) return 'menos ' + numberToWords(-num);
   
-  // Para números muy grandes, simplemente mostrar el número redondeado
+  // Para n�meros muy grandes, simplemente mostrar el n�mero redondeado
   if (num >= 1000000000000) {
     return Math.round(num / 1000000000000) + ' billones';
   }
   
   const ones = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
   const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
-  const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+  const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'diecis�is', 'diecisiete', 'dieciocho', 'diecinueve'];
   
   function convertLessThanThousand(n) {
     let result = '';
@@ -2572,7 +2621,7 @@ function renderGoalCalendar(horizonteYears) {
 }
 
 /* =====================================================
-   RECALC / PROYECCIÓN
+   RECALC / PROYECCI�N
    ===================================================== */
 function recalc() {
   try {
@@ -2609,7 +2658,7 @@ function recalc() {
     return pts;
   });
 
-  const labels      = ['Inicio', ...years.map(y => 'Año ' + y)];
+  const labels      = ['Inicio', ...years.map(y => 'A�o ' + y)];
   const totalByYear = labels.map((_, i) => seriesData.reduce((s, d) => s + d[i], 0));
   const totalFinal  = totalByYear[totalByYear.length - 1];
   const totalAportes = capitalEfectivo + monthlyPlan.reduce((sum, val) => sum + val, 0);
@@ -2618,7 +2667,7 @@ function recalc() {
 
   document.getElementById('m-final').textContent   = fmtNum(totalFinal);
   const finalAmount = currency === 'USD' ? Math.round(totalFinal / tc) : Math.round(totalFinal);
-  const currency_label = currency === 'USD' ? 'dólares' : 'pesos';
+  const currency_label = currency === 'USD' ? 'd�lares' : 'pesos';
   document.getElementById('m-final-words').textContent = numberToWords(finalAmount) + ' ' + currency_label;
   document.getElementById('m-rend').textContent    = rendPct.toFixed(0) + '%';
   document.getElementById('m-aportes').textContent = fmtNum(totalAportes);
@@ -2704,7 +2753,7 @@ function recalc() {
   // Tabla anual
   const head = document.getElementById('tabla-head');
   const body = document.getElementById('tabla-body');
-  head.innerHTML = '<th style="width:80px;">Año</th>'
+  head.innerHTML = '<th style="width:80px;">A�o</th>'
     + instData.map(i => `<th>${i.name}</th>`).join('')
     + '<th>Total</th><th>Real (inflac.)</th>';
   body.innerHTML = '';
@@ -2714,7 +2763,7 @@ function recalc() {
     const total    = instVals.reduce((a, b) => a + b, 0);
     const real     = total / Math.pow(1 + inflacion, y);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>Año ${y}</td>`
+    tr.innerHTML = `<td>A�o ${y}</td>`
       + instVals.map(v => `<td>${fmtNum(v)}</td>`).join('')
       + `<td class="total-col">${fmtNum(total)}</td>`
       + `<td class="real-col">${fmtNum(real)}</td>`;
@@ -2761,9 +2810,9 @@ function recalc() {
   // Estado de objetivo en curso
   updateObjectiveView();
   } catch (e) {
-    console.error('Recalc error:', e);
-    document.getElementById('m-final').textContent = '⚠ Error';
-    document.getElementById('m-rend').textContent = '⚠ Error';
+    debugError('Recalc error:', e);
+    document.getElementById('m-final').textContent = '? Error';
+    document.getElementById('m-rend').textContent = '? Error';
   }
 }
 
@@ -2797,7 +2846,7 @@ async function init() {
     await loadNegociosEmpresasCache();
     await loadNegociosVentasCache();
   } catch (e) {
-    console.warn('Error al cargar datos:', e);
+    debugWarn('Error al cargar datos:', e);
   }
 
   renderTenenciasTables();
@@ -2814,7 +2863,7 @@ async function init() {
   if (planTicker) clearInterval(planTicker);
   planTicker = setInterval(updateObjectiveView, 1000);
 
-  // await refreshMarketData(); // Comentado: elementos HTML no existen en el nuevo diseño
+  // await refreshMarketData(); // Comentado: elementos HTML no existen en el nuevo dise�o
   recalc();
 }
 
@@ -2843,10 +2892,11 @@ async function autoInit() {
       showLogin();
     }
   } catch (err) {
-    console.error('Startup error:', err);
-    document.body.innerHTML = `<div style="padding:20px; color:red;">❌ Error: ${err.message}</div>`;
+    debugError('Startup error:', err);
+    document.body.innerHTML = `<div style="padding:20px; color:red;">? Error: ${err.message}</div>`;
   }
 }
 
 document.addEventListener('DOMContentLoaded', autoInit);
+
 

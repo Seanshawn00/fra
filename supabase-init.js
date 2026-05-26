@@ -1,6 +1,10 @@
 // Supabase REST API Client - Sin dependencias externas
 // Implementación minimalista con API fluida compatible
 
+// Deshabilitar logs en producción
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const debugLog = isProduction ? () => {} : console.log;
+
 const SUPABASE_URL = 'https://mpzpaccuqccjpmoilrhw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_SQXRTT30mja_a2zyRX5x8g_PI85IjCW';
 
@@ -97,7 +101,7 @@ class QueryBuilder {
       const data = await response.json();
       return { data, error: null };
     } catch (error) {
-      console.error(`API Error [${this.method} ${path}]:`, error);
+      debugLog(`API Error [${this.method} ${path}]:`, error);
       return { data: null, error: { message: error.message } };
     }
   }
@@ -114,11 +118,11 @@ class SupabaseClient {
   }
 }
 
-console.log('✅ Supabase REST Client cargado');
+debugLog('✅ Supabase REST Client cargado');
 
 // Crear cliente global
 window.supabase = new SupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-console.log('🌐 Conectado a:', SUPABASE_URL);
+debugLog('🌐 Conectado a:', SUPABASE_URL);
 
 // Esperar a que el document esté COMPLETAMENTE CARGADO (incluyendo script.js)
 // antes de disparar el evento supabaseReady
@@ -126,17 +130,19 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     // Esperar un tick más para asegurar que script.js está ejecutado
     setTimeout(() => {
-      console.log('📡 Disparando evento supabaseReady');
+      debugLog('📡 Disparando evento supabaseReady');
       document.dispatchEvent(new Event('supabaseReady'));
     }, 10);
   });
 } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
   // DOM ya está completado
   setTimeout(() => {
-    console.log('📡 Disparando evento supabaseReady (DOM ready)');
+    debugLog('📡 Disparando evento supabaseReady (DOM ready)');
     document.dispatchEvent(new Event('supabaseReady'));
   }, 10);
 }
+
+
 
 
 
