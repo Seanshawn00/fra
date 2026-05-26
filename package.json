@@ -1,0 +1,16 @@
+{
+  "name": "fra-web",
+  "version": "2.0.0",
+  "description": "F.R.A - Plan de Retiro - Versión Web",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["finanzas", "retiro", "inversión"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
